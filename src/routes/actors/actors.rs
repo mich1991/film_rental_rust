@@ -1,32 +1,10 @@
 use crate::AppState;
+use crate::models::GenericResponse;
 use actix_web::{get, post, put, delete, web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 use sqlx::types::{chrono, JsonValue};
 use sqlx::{self, FromRow};
 
-#[derive(Serialize,Deserialize)]
-struct GenericResponse<T, U>{
-    status: String,
-    data: T,
-    message: U
-}
-
-impl<T, U> GenericResponse<T, U> {
-    pub fn success(data: T, message: U) -> Self {
-        Self {
-            status: "Success".to_string(),
-            message,
-            data,
-        }
-    }
-    pub fn error(data: T, message: U) -> Self {
-        Self {
-            status: "Error".to_string(),
-            message,
-            data,
-        }
-    }
-}
 
 #[derive(Serialize, Deserialize, FromRow)]
 pub struct Actor {

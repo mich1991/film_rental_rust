@@ -1,4 +1,5 @@
 mod routes;
+mod models;
 
 use actix_web::{web, App, HttpServer};
 use dotenv::dotenv;

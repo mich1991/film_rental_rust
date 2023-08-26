@@ -1,8 +1,9 @@
 use crate::AppState;
+use crate::models::GenericResponse;
+
 use actix_web::{get, web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
-use sqlx::types::{chrono, JsonValue};
-use sqlx::{self, Error, FromRow};
+use sqlx::{self, FromRow};
 
 #[derive(FromRow, Deserialize, Serialize)]
 pub struct TotalMoviesPerCategory {
@@ -21,10 +22,11 @@ pub async fn get_total_movies_per_category(state: web::Data<AppState>) -> impl R
     ")
         .fetch_all(&state.db)
         .await {
-        Ok(movies) => HttpResponse::Ok().json(movies),
+        Ok(movies) => HttpResponse::Ok()
+            .json(GenericResponse::success(movies, "Returned total movies per category")),
         Err(e) => {
             println!("{e}");
-            HttpResponse::NotFound().body("Movies not found")
+            HttpResponse::NotFound().json(GenericResponse::error((),"Movies not found"))
         }
     }
 }
@@ -36,7 +38,6 @@ pub struct TopMovies {
 }
 #[get("/movies/top_3_rented")]
 pub async fn top_3_rented(state: web::Data<AppState>) -> impl Responder {
-    //
     match sqlx::query_as::<_, TopMovies>("
     SELECT t3.title,  count(*)
     FROM rental t1
@@ -51,10 +52,10 @@ pub async fn top_3_rented(state: web::Data<AppState>) -> impl Responder {
         .fetch_all(&state.db)
         .await
     {
-        Ok(top) => HttpResponse::Ok().json(top),
+        Ok(top) => HttpResponse::Ok().json(GenericResponse::success(top, "Returned top 3 rented movies")),
         Err(e) => {
             println!("{e}");
-            HttpResponse::NotFound().body("Movies not found")
+            HttpResponse::NotFound().json(GenericResponse::error((), "Didn't find any movies"))
         }
     }
 }

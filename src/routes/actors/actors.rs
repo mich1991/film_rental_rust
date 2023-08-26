@@ -1,8 +1,32 @@
 use crate::AppState;
-use actix_web::{get, web, HttpResponse, Responder};
+use actix_web::{get, post, put, delete, web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 use sqlx::types::{chrono, JsonValue};
 use sqlx::{self, FromRow};
+
+#[derive(Serialize,Deserialize)]
+struct GenericResponse<T, U>{
+    status: String,
+    data: T,
+    message: U
+}
+
+impl<T, U> GenericResponse<T, U> {
+    pub fn success(data: T, message: U) -> Self {
+        Self {
+            status: "Success".to_string(),
+            message,
+            data,
+        }
+    }
+    pub fn error(data: T, message: U) -> Self {
+        Self {
+            status: "Error".to_string(),
+            message,
+            data,
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, FromRow)]
 pub struct Actor {
@@ -26,7 +50,31 @@ pub async fn get_actors(state: web::Data<AppState>) -> impl Responder {
     }
 }
 
-#[get("/actor/{id}")]
+#[derive(FromRow, Serialize, Deserialize)]
+pub struct ActorForm {
+   pub first_name: String,
+   pub last_name: String,
+}
+
+#[post("/actors")]
+pub async fn post_actor(state: web::Data<AppState>, form: web::Json<ActorForm>) -> impl Responder {
+    match sqlx::query_as::<_, Actor>("\
+    INSERT INTO actor (first_name, last_name) \
+    VALUES ($1,$2)\
+    RETURNING *")
+        .bind(&form.first_name).bind(&form.last_name)
+        .fetch_optional(&state.db)
+        .await
+    {
+        Ok(actors) => HttpResponse::Ok().json(GenericResponse::success(actors, "Successfully added new actor")),
+        Err(e) => {
+            println!("{}", e);
+            HttpResponse::BadRequest().json("Some fields are missing.")
+        }
+    }
+}
+
+#[get("/actors/{id}")]
 pub async fn get_actor(state: web::Data<AppState>, path: web::Path<i32>) -> impl Responder {
     let id = path.into_inner();
     match sqlx::query_as::<_, Actor>("SELECT * FROM actor WHERE actor_id = $1 ")
@@ -42,8 +90,48 @@ pub async fn get_actor(state: web::Data<AppState>, path: web::Path<i32>) -> impl
     }
 }
 
+#[put("/actors/{id}")]
+pub async fn update_actor(state: web::Data<AppState>, path: web::Path<i64>, form: web::Json<ActorForm>) -> impl Responder {
+    let id = path.into_inner();
+    match sqlx::query_as::<_, Actor>("\
+    UPDATE actor \
+    SET \
+    first_name = $1, \
+    last_name = $2 \
+    WHERE actor_id = $3
+    RETURNING *")
+        .bind(&form.first_name).bind(&form.last_name)
+        .bind(id)
+        .fetch_optional(&state.db)
+        .await
+    {
+        Ok(actors) => HttpResponse::Ok().json(actors),
+        Err(e) => {
+            println!("{}", e);
+            HttpResponse::BadRequest().json("Some fields are missing.")
+        }
+    }
+}
+
+#[delete("/actors/{id}")]
+pub async fn delete_actor(state: web::Data<AppState>, path: web::Path<i64>) -> impl Responder {
+    let id = path.into_inner();
+    let query = sqlx::query("DELETE FROM actor WHERE actor_id = $1")
+        .bind(&id.clone())
+        .execute(&state.db)
+        .await;
+    match query {
+        Ok(_) => HttpResponse::Ok().json(GenericResponse::success((), "success: ".to_owned() + id.to_string().as_str())),
+        Err(e) => {
+            println!("{e}");
+            HttpResponse::BadRequest().json(GenericResponse::error((), "error while deleting user: ".to_owned() + id.to_string().as_str()))
+        }
+    }
+}
+
+
 #[derive(Deserialize)]
-struct ActorQuery {
+pub struct ActorQuery {
     pub first_name: String,
     pub last_name: String,
 }
@@ -108,5 +196,8 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_actor_query)
         .service(get_actors)
         .service(get_actor)
+        .service(post_actor)
+        .service(update_actor)
+        .service(delete_actor)
         .service(get_actor_films_by_category);
 }

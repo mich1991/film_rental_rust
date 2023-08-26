@@ -6,11 +6,11 @@ use sqlx;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
 use std::sync::Mutex;
+use actix_cors::Cors;
 
 pub struct AppState {
-    app_name: String,
-    counter: Mutex<i32>,
-    db: Pool<Postgres>,
+    pub counter: Mutex<i32>,
+    pub db: Pool<Postgres>,
 }
 
 #[actix_web::main]
@@ -25,7 +25,6 @@ async fn main() -> std::io::Result<()> {
         .expect("Error connecting to DB");
 
     let app_state = web::Data::new(AppState {
-        app_name: String::from("Actix web"),
         counter: Mutex::new(0),
         db: pool.clone(),
     });
@@ -33,12 +32,19 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let counter = web::scope("/counter").configure(routes::counter_routes);
         let api = web::scope("/api").configure(routes::api_routes);
+        let cors = Cors::permissive();
 
-        // let api = web::scope("/api")
-        //     .configure(routes::actors::routes)
-        //     .configure(routes::cities::routes);
-
+        // let cors = Cors::default()
+        //     .allowed_origin("http://localhost:4200/")
+        //     .allowed_origin_fn(|origin, _req_head| {
+        //         origin.as_bytes().ends_with(b".localhost:4200")
+        //     })
+        //     .allowed_methods(vec!["GET", "POST"])
+        //     .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+        //     .allowed_header(http::header::CONTENT_TYPE)
+        //     .max_age(3600);
         App::new()
+            .wrap(cors)
             .app_data(app_state.clone())
             .service(counter)
             .service(api)

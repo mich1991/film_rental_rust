@@ -36,7 +36,7 @@ async fn main() -> std::io::Result<()> {
         let cors = Cors::permissive();
 
         // let cors = Cors::default()
-        //     .allowed_origin("http://localhost:4200/")
+        //     .allowed_origin("http://localhost:4200")
         //     .allowed_origin_fn(|origin, _req_head| {
         //         origin.as_bytes().ends_with(b".localhost:4200")
         //     })
@@ -49,7 +49,6 @@ async fn main() -> std::io::Result<()> {
             .app_data(app_state.clone())
             .service(counter)
             .service(api)
-        // .route("/hey", web::get().to(manual_hello()))
     })
     .bind(("127.0.0.1", 8080))?
     .run()

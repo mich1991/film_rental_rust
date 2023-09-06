@@ -11,7 +11,7 @@ pub struct City {
     pub last_update: chrono::NaiveDateTime,
 }
 
-#[get("/city")]
+#[get("")]
 pub async fn get_cities(state: web::Data<AppState>) -> impl Responder {
     match sqlx::query_as::<_, City>("SELECT * FROM city")
         .fetch_all(&state.db)

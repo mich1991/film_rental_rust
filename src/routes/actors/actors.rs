@@ -14,7 +14,7 @@ pub struct Actor {
     pub last_update: chrono::NaiveDateTime,
 }
 
-#[get("/actors")]
+#[get("")]
 pub async fn get_actors(state: web::Data<AppState>) -> impl Responder {
     match sqlx::query_as::<_, Actor>("SELECT * FROM actor")
         .fetch_all(&state.db)
@@ -34,7 +34,7 @@ pub struct ActorForm {
    pub last_name: String,
 }
 
-#[post("/actors")]
+#[post("")]
 pub async fn post_actor(state: web::Data<AppState>, form: web::Json<ActorForm>) -> impl Responder {
     match sqlx::query_as::<_, Actor>("\
     INSERT INTO actor (first_name, last_name) \
@@ -52,7 +52,7 @@ pub async fn post_actor(state: web::Data<AppState>, form: web::Json<ActorForm>) 
     }
 }
 
-#[get("/actors/{id}")]
+#[get("/{id}")]
 pub async fn get_actor(state: web::Data<AppState>, path: web::Path<i32>) -> impl Responder {
     let id = path.into_inner();
     match sqlx::query_as::<_, Actor>("SELECT * FROM actor WHERE actor_id = $1 ")
@@ -68,7 +68,7 @@ pub async fn get_actor(state: web::Data<AppState>, path: web::Path<i32>) -> impl
     }
 }
 
-#[put("/actors/{id}")]
+#[put("/{id}")]
 pub async fn update_actor(state: web::Data<AppState>, path: web::Path<i64>, form: web::Json<ActorForm>) -> impl Responder {
     let id = path.into_inner();
     match sqlx::query_as::<_, Actor>("\
@@ -83,7 +83,7 @@ pub async fn update_actor(state: web::Data<AppState>, path: web::Path<i64>, form
         .fetch_optional(&state.db)
         .await
     {
-        Ok(actors) => HttpResponse::Ok().json(actors),
+        Ok(actors) => HttpResponse::Ok().json(GenericResponse::success(actors, "updated actor successfully")),
         Err(e) => {
             println!("{}", e);
             HttpResponse::BadRequest().json("Some fields are missing.")
@@ -91,7 +91,7 @@ pub async fn update_actor(state: web::Data<AppState>, path: web::Path<i64>, form
     }
 }
 
-#[delete("/actors/{id}")]
+#[delete("/{id}")]
 pub async fn delete_actor(state: web::Data<AppState>, path: web::Path<i64>) -> impl Responder {
     let id = path.into_inner();
     let query = sqlx::query("DELETE FROM actor WHERE actor_id = $1")

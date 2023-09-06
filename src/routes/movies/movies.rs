@@ -17,7 +17,7 @@ pub struct Movies {
     rating: String,
 }
 
-#[get("/movies")]
+#[get("")]
 pub async fn get_all_movies(state: web::Data<AppState>) -> impl Responder {
     match sqlx::query_as::<_, Movies>("
     SELECT * FROM film
@@ -40,7 +40,7 @@ pub struct TotalMoviesPerCategory {
     count: i64,
 }
 
-#[get("/movies/total_by_category")]
+#[get("/total_by_category")]
 pub async fn get_total_movies_per_category(state: web::Data<AppState>) -> impl Responder {
     match sqlx::query_as::<_, TotalMoviesPerCategory>("\
     SELECT t1.name as category_name, count(*) as count
@@ -67,7 +67,7 @@ pub struct TopMovies {
     count: i64,
 }
 
-#[get("/movies/top_3_rented")]
+#[get("/top_3_rented")]
 pub async fn top_3_rented(state: web::Data<AppState>) -> impl Responder {
     match sqlx::query_as::<_, TopMovies>("
     SELECT t3.title, count(*)

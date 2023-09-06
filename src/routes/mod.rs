@@ -10,8 +10,8 @@ pub use counter::counter_routes;
 
 pub fn api_routes(cfg: &mut web::ServiceConfig) {
     cfg
-        .configure(actors::routes)
-        .configure(cities::routes)
-        .configure(customers::routes)
-        .configure(movies::routes);
+        .service(web::scope("actors").configure(actors::routes))
+        .service(web::scope("cities").configure(cities::routes))
+        .service(web::scope("customers").configure(customers::routes))
+        .service(web::scope("movies").configure(movies::routes));
 }

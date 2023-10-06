@@ -222,10 +222,10 @@ pub async fn create_customer(state: web::Data<AppState>, data: web::Json<CreateC
         .fetch_one(&mut *tx).await.expect("Error while inserting new address");
 
     let customer = sqlx::query!("INSERT INTO customer \
-    (store_id, first_name, last_name, email, address_id, activebool) \
-    VALUES ($1, $2, $3, $4, $5, $6)\
-    RETURNING *
-    ;",
+        (store_id, first_name, last_name, email, address_id, activebool) \
+        VALUES ($1, $2, $3, $4, $5, $6)\
+        RETURNING *
+        ;",
         &data.store_id.to_owned(),
         &data.first_name,
         &data.last_name,

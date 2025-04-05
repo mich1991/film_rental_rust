@@ -5,6 +5,7 @@ pub mod cities;
 pub mod counter;
 pub mod movies;
 pub mod customers;
+pub mod stores;
 
 pub use counter::counter_routes;
 
@@ -13,5 +14,6 @@ pub fn api_routes(cfg: &mut web::ServiceConfig) {
         .service(web::scope("actors").configure(actors::routes))
         .service(web::scope("cities").configure(cities::routes))
         .service(web::scope("customers").configure(customers::routes))
-        .service(web::scope("movies").configure(movies::routes));
+        .service(web::scope("movies").configure(movies::routes))
+        .service(web::scope("stores").configure(stores::routes));
 }

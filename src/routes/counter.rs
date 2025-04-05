@@ -12,7 +12,6 @@ struct CounterInfo {
 async fn add_counter(state: web::Data<AppState>) -> impl Responder {
     let mut counter = state.counter.lock().unwrap();
     *counter += 1;
-    format!("current counter, {}", counter);
     HttpResponse::Ok().body(counter.to_string())
 }
 
@@ -52,7 +51,6 @@ async fn add_counter_amount_multi(
 pub async fn minus_counter(state: web::Data<AppState>) -> impl Responder {
     let mut counter = state.counter.lock().unwrap();
     *counter -= 1;
-    format!("current counter, {}", counter);
     HttpResponse::Ok().body(counter.to_string())
 }
 
@@ -76,7 +74,6 @@ pub async fn minus_counter_amount(
     let mut counter = state.counter.lock().unwrap();
     let amount = path;
     *counter -= amount;
-    format!("current counter, {}", counter);
     HttpResponse::Ok().body(counter.to_string())
 }
 
@@ -89,7 +86,6 @@ async fn minus_counter_amount_multi(
     let (amount, multiplier) = path.into_inner();
     let mut counter = state.counter.lock().unwrap();
     *counter += amount * multiplier;
-    format!("current counter, {}", counter);
     HttpResponse::Ok().body(counter.to_string())
 }
 
